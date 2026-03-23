@@ -4,7 +4,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://YOUR_RAILWAY_URL/api/$1"
+      "destination": "https://multimodal-video-health-ai-production.up.railway.app/api/$1"
     }
   ],
   "ignoreCommand": "git diff --quiet HEAD^ HEAD -- backend/"

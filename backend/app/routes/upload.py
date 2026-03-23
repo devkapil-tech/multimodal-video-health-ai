@@ -1,7 +1,7 @@
 import os
 import uuid
 import shutil
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from app.core.config import settings
 from app.services.video import extract_frames, get_video_metadata
 from app.services.pose import analyze_pose
@@ -9,6 +9,7 @@ from app.services.biomechanics import analyze_biomechanics
 from app.services.audio import transcribe
 from app.services.reasoning import generate_insights
 from app.schemas.analysis import AnalysisResult
+from app.routes.report import store_result
 
 router = APIRouter()
 
@@ -16,7 +17,7 @@ ALLOWED_EXTENSIONS = {".mp4", ".mov", ".avi", ".mkv", ".webm"}
 
 
 @router.post("/upload", response_model=AnalysisResult)
-async def upload_video(file: UploadFile = File(...)):
+async def upload_video(file: UploadFile = File(...), exercise_type: str = Form("general")):
     ext = os.path.splitext(file.filename)[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(400, f"Unsupported format. Allowed: {ALLOWED_EXTENSIONS}")
@@ -42,11 +43,11 @@ async def upload_video(file: UploadFile = File(...)):
         timestamp = i / max(settings.frame_rate, 1)
         pose_results.append(analyze_pose(fp, frame_index=i, timestamp=timestamp))
 
-    biomechanics = analyze_biomechanics(pose_results)
+    biomechanics = analyze_biomechanics(pose_results, exercise_type=exercise_type)
     transcript = transcribe(video_path, session_id)
     summary, recommendations = generate_insights(biomechanics, transcript)
 
-    return AnalysisResult(
+    result = AnalysisResult(
         session_id=session_id,
         frames_processed=len(frame_paths),
         duration_sec=round(duration, 2),
@@ -56,4 +57,7 @@ async def upload_video(file: UploadFile = File(...)):
         ai_summary=summary,
         recommendations=recommendations,
         overall_risk=biomechanics.risk_level,
+        exercise_type=exercise_type,
     )
+    store_result(result)
+    return result

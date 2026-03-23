@@ -38,3 +38,4 @@ class AnalysisResult(BaseModel):
     ai_summary: Optional[str]
     recommendations: List[str]
     overall_risk: str
+    exercise_type: str = "general"

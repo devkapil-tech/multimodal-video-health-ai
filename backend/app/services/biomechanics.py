@@ -38,7 +38,9 @@ def asymmetry_score(landmarks: dict) -> float:
     return round((shoulder_diff + hip_diff) / 2, 4)
 
 
-def analyze_biomechanics(pose_results: List[FramePose]) -> BiomechanicsResult:
+def analyze_biomechanics(pose_results: List[FramePose], exercise_type: str = "general") -> BiomechanicsResult:
+    from app.services.exercise_library import get_exercise
+    thresholds = get_exercise(exercise_type)["thresholds"]
     valid = [p for p in pose_results if p.shoulder and p.hip and p.knee and p.ankle]
     alerts = []
     knee_angles, hip_angles, deviations, asym_scores = [], [], [], []
@@ -66,13 +68,13 @@ def analyze_biomechanics(pose_results: List[FramePose]) -> BiomechanicsResult:
     avg_dev = sum(deviations) / len(deviations) if deviations else None
     avg_asym = sum(asym_scores) / len(asym_scores) if asym_scores else None
 
-    if avg_knee is not None and avg_knee < 70:
+    if avg_knee is not None and avg_knee < thresholds["knee_min"]:
         alerts.append(f"⚠️ Deep knee flexion detected (avg {avg_knee:.1f}°) — increased knee joint stress")
-    if avg_hip is not None and avg_hip < 60:
+    if avg_hip is not None and avg_hip < thresholds["hip_min"]:
         alerts.append(f"⚠️ Excessive hip flexion (avg {avg_hip:.1f}°) — lumbar load risk")
-    if avg_dev is not None and avg_dev > 0.08:
+    if avg_dev is not None and avg_dev > thresholds["spine_dev_max"]:
         alerts.append(f"⚠️ Lateral spine deviation detected ({avg_dev:.3f}) — possible scoliosis compensation")
-    if avg_asym is not None and avg_asym > 0.05:
+    if avg_asym is not None and avg_asym > thresholds["asym_max"]:
         alerts.append(f"⚠️ Bilateral asymmetry detected ({avg_asym:.3f}) — uneven muscle loading")
 
     # Overall risk level

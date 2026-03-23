@@ -1,6 +1,8 @@
 import RiskBadge from "./RiskBadge";
 import MetricCard from "./MetricCard";
 
+const API = import.meta.env.VITE_API_URL ?? "";
+
 export default function ResultsPanel({ result }) {
   const { biomechanics, ai_summary, recommendations, frames_processed, duration_sec, transcript, overall_risk } = result;
 
@@ -9,7 +11,25 @@ export default function ResultsPanel({ result }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold">Analysis Results</h2>
-        <RiskBadge level={overall_risk} />
+        <div className="flex items-center gap-3">
+          <RiskBadge level={overall_risk} />
+          <div className="flex gap-2">
+            <a
+              href={`${API}/api/v1/report/${result.session_id}/pdf`}
+              download
+              className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-200 px-3 py-1.5 rounded-lg transition"
+            >
+              ⬇ PDF Report
+            </a>
+            <a
+              href={`${API}/api/v1/report/${result.session_id}/fhir`}
+              download
+              className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-200 px-3 py-1.5 rounded-lg transition"
+            >
+              ⬇ FHIR Export
+            </a>
+          </div>
+        </div>
       </div>
 
       {/* Metrics */}

@@ -5,9 +5,10 @@ import useSWRMutation from "swr/mutation";
 // In production (Vercel): VITE_API_URL="" so calls are relative → Vercel rewrites → Railway
 const API = import.meta.env.VITE_API_URL ?? "";
 
-async function uploadVideo(url, { arg: file }) {
+async function uploadVideo(url, { arg: { file, exerciseType } }) {
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("exercise_type", exerciseType);
   const res = await fetch(url, { method: "POST", body: formData });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -16,7 +17,7 @@ async function uploadVideo(url, { arg: file }) {
   return res.json();
 }
 
-export default function UploadPanel({ onResult, onLoading }) {
+export default function UploadPanel({ onResult, onLoading, exerciseType = "general" }) {
   const [file, setFile] = useState(null);
   const inputRef = useRef();
 
@@ -38,7 +39,7 @@ export default function UploadPanel({ onResult, onLoading }) {
     if (!file) return;
     onLoading(true);
     onResult(null);
-    trigger(file);
+    trigger({ file, exerciseType });
   };
 
   return (

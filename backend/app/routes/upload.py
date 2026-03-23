@@ -17,7 +17,11 @@ ALLOWED_EXTENSIONS = {".mp4", ".mov", ".avi", ".mkv", ".webm"}
 
 
 @router.post("/upload", response_model=AnalysisResult)
-async def upload_video(file: UploadFile = File(...), exercise_type: str = Form("general")):
+async def upload_video(
+    file: UploadFile = File(...),
+    exercise_type: str = Form("general"),
+    patient_token: str = Form(""),
+):
     ext = os.path.splitext(file.filename)[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(400, f"Unsupported format. Allowed: {ALLOWED_EXTENSIONS}")
@@ -47,17 +51,44 @@ async def upload_video(file: UploadFile = File(...), exercise_type: str = Form("
     transcript = transcribe(video_path, session_id)
     summary, recommendations = generate_insights(biomechanics, transcript)
 
-    result = AnalysisResult(
-        session_id=session_id,
-        frames_processed=len(frame_paths),
-        duration_sec=round(duration, 2),
-        pose_results=pose_results,
-        biomechanics=biomechanics,
-        transcript=transcript,
-        ai_summary=summary,
-        recommendations=recommendations,
-        overall_risk=biomechanics.risk_level,
-        exercise_type=exercise_type,
-    )
+    # CML: retrieve history and store result
+    longitudinal_insights = None
+    if patient_token:
+        from app.services.memory_retrieve import get_patient_history, build_longitudinal_insights, build_history_context
+        from app.services.memory_store import store_session
+        history = get_patient_history(patient_token)
+        if history:
+            history_ctx = build_history_context(history)
+            # Re-run reasoning with history context
+            summary, recommendations = generate_insights(biomechanics, transcript, history_context=history_ctx)
+        longitudinal_insights = build_longitudinal_insights(history, exercise_type)
+        result = AnalysisResult(
+            session_id=session_id,
+            frames_processed=len(frame_paths),
+            duration_sec=round(duration, 2),
+            pose_results=pose_results,
+            biomechanics=biomechanics,
+            transcript=transcript,
+            ai_summary=summary,
+            recommendations=recommendations,
+            overall_risk=biomechanics.risk_level,
+            exercise_type=exercise_type,
+            patient_token=patient_token if patient_token else None,
+            longitudinal_insights=longitudinal_insights,
+        )
+        store_session(result, patient_token)
+    else:
+        result = AnalysisResult(
+            session_id=session_id,
+            frames_processed=len(frame_paths),
+            duration_sec=round(duration, 2),
+            pose_results=pose_results,
+            biomechanics=biomechanics,
+            transcript=transcript,
+            ai_summary=summary,
+            recommendations=recommendations,
+            overall_risk=biomechanics.risk_level,
+            exercise_type=exercise_type,
+        )
     store_result(result)
     return result

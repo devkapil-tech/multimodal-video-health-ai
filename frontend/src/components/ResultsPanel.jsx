@@ -1,13 +1,16 @@
 import RiskBadge from "./RiskBadge";
 import MetricCard from "./MetricCard";
+import MemoryPanel from "./MemoryPanel";
 
 const API = import.meta.env.VITE_API_URL ?? "";
 
 export default function ResultsPanel({ result }) {
-  const { biomechanics, ai_summary, recommendations, frames_processed, duration_sec, transcript, overall_risk } = result;
+  const { biomechanics, ai_summary, recommendations, frames_processed, duration_sec, transcript, overall_risk, longitudinal_insights } = result;
 
   return (
     <div className="space-y-6">
+      <MemoryPanel insights={longitudinal_insights} />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold">Analysis Results</h2>

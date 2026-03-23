@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     whisper_model: str = "base"       # tiny / base / small / medium / large
     openai_api_key: str = ""
     ollama_base_url: str = "http://localhost:11434"
+    database_url: str = ""
+    embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
 
     class Config:
         env_file = ".env"

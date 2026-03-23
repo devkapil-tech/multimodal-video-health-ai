@@ -28,6 +28,25 @@ class BiomechanicsResult(BaseModel):
     risk_level: str  # low / medium / high
 
 
+class LongitudinalInsights(BaseModel):
+    session_count: int
+    trend: str  # improving | worsening | stable | insufficient_data
+    trend_summary: str
+    knee_angle_trend: List[Optional[float]]
+    hip_angle_trend: List[Optional[float]]
+    risk_history: List[str]
+    key_observation: Optional[str] = None
+
+
+class SessionSummary(BaseModel):
+    session_id: str
+    exercise_type: str
+    knee_angle: Optional[float]
+    hip_angle: Optional[float]
+    risk_level: str
+    created_at: Optional[str] = None
+
+
 class AnalysisResult(BaseModel):
     session_id: str
     frames_processed: int
@@ -39,3 +58,5 @@ class AnalysisResult(BaseModel):
     recommendations: List[str]
     overall_risk: str
     exercise_type: str = "general"
+    patient_token: Optional[str] = None
+    longitudinal_insights: Optional[LongitudinalInsights] = None

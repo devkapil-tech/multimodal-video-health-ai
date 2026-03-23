@@ -5,6 +5,7 @@ import ResultsPanel from "./components/ResultsPanel";
 import LiveCamera from "./components/LiveCamera";
 import ComparisonPanel from "./components/ComparisonPanel";
 import ExerciseSelector from "./components/ExerciseSelector";
+import PatientTokenInput from "./components/PatientTokenInput";
 
 const TABS = [
   { id: "upload", label: "📤 Upload Video" },
@@ -17,11 +18,15 @@ export default function App() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [exerciseType, setExerciseType] = useState("general");
+  const [patientToken, setPatientToken] = useState("");
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       <Header />
       <main className="max-w-5xl mx-auto px-4 py-10 space-y-6">
+        {/* Patient token — enables longitudinal memory */}
+        <PatientTokenInput value={patientToken} onChange={setPatientToken} />
+
         {/* Exercise selector — applies to all modes */}
         <ExerciseSelector value={exerciseType} onChange={setExerciseType} />
 
@@ -45,7 +50,7 @@ export default function App() {
         {/* Tab content */}
         {tab === "upload" && (
           <div className="space-y-6">
-            <UploadPanel onResult={setResult} onLoading={setLoading} exerciseType={exerciseType} />
+            <UploadPanel onResult={setResult} onLoading={setLoading} exerciseType={exerciseType} patientToken={patientToken} />
             {loading && (
               <div className="text-center text-blue-400 animate-pulse text-lg">
                 Analysing movement — extracting poses, biomechanics, and insights...

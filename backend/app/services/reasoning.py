@@ -15,7 +15,7 @@ You receive movement analysis data from video and provide:
 Be factual. Do not over-diagnose. Flag when professional assessment is needed."""
 
 
-def build_prompt(biomechanics: BiomechanicsResult, transcript: str | None) -> str:
+def build_prompt(biomechanics: BiomechanicsResult, transcript: str | None, history_context: str = "") -> str:
     lines = [
         "=== MOVEMENT ANALYSIS DATA ===",
         f"Risk Level: {biomechanics.risk_level.upper()}",
@@ -31,6 +31,9 @@ def build_prompt(biomechanics: BiomechanicsResult, transcript: str | None) -> st
 
     if transcript:
         lines += ["", "=== AUDIO TRANSCRIPT ===", transcript]
+
+    if history_context:
+        lines += ["", history_context]
 
     lines += ["", "Provide a clinical summary and recommendations."]
     return "\n".join(lines)
@@ -90,9 +93,10 @@ def _rule_based_summary(biomechanics: BiomechanicsResult) -> tuple[str, list[str
 def generate_insights(
     biomechanics: BiomechanicsResult,
     transcript: str | None = None,
+    history_context: str = "",
 ) -> tuple[str, list[str]]:
     """Returns (summary, recommendations)."""
-    prompt = build_prompt(biomechanics, transcript)
+    prompt = build_prompt(biomechanics, transcript, history_context)
 
     # Try LLM backends in order
     llm_response = None

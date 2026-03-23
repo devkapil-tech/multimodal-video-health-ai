@@ -1,7 +1,9 @@
 import { useState, useRef } from "react";
 import useSWRMutation from "swr/mutation";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
+// In dev: proxy via vite.config.js → localhost:8000
+// In production (Vercel): VITE_API_URL="" so calls are relative → Vercel rewrites → Railway
+const API = import.meta.env.VITE_API_URL ?? "";
 
 async function uploadVideo(url, { arg: file }) {
   const formData = new FormData();
